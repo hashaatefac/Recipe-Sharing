@@ -4,11 +4,20 @@ import { useRouter } from "next/navigation";
 import { supabase } from "../../lib/supabase";
 import { useSession } from "../components/SessionProvider";
 
+interface Recipe {
+  id: string;
+  title: string;
+  user_id: string;
+  ingredients: string;
+  created_at: string;
+}
+
 export default function DashboardPage() {
   const { user, isLoading } = useSession();
   const router = useRouter();
-  const [recipes, setRecipes] = useState<any[]>([]);
+  const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (isLoading) return; // Wait for session to load
@@ -21,11 +30,16 @@ export default function DashboardPage() {
     
     async function fetchRecipes() {
       setLoading(true);
-      const { data, error } = await supabase
-        .from("recipes")
-        .select("id, title, user_id, ingredients, created_at")
-        .order("created_at", { ascending: false });
-      if (!error && data) setRecipes(data);
+      try {
+        const { data, error } = await supabase
+          .from("recipes")
+          .select("id, title, user_id, ingredients, created_at")
+          .order("created_at", { ascending: false });
+        if (!error && data) setRecipes(data);
+      } catch (error: unknown) {
+        console.error('Error fetching recipes:', error);
+        setError('Failed to load recipes');
+      }
       setLoading(false);
     }
     fetchRecipes();
@@ -48,6 +62,8 @@ export default function DashboardPage() {
         <h2 className="text-xl font-semibold mb-4">All Recipes</h2>
         {loading ? (
           <div className="text-center text-gray-500">Loading recipes...</div>
+        ) : error ? (
+          <div className="text-center text-red-500">{error}</div>
         ) : recipes.length === 0 ? (
           <div className="text-center text-gray-500">No recipes found.</div>
         ) : (

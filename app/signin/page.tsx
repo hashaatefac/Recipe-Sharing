@@ -32,9 +32,12 @@ export default function SignInPage() {
         <ChefHat className="h-8 w-8 text-orange-500" />
         <span>RecipeShare</span>
       </Link>
+      <p className="text-gray-600 mb-6">
+        Welcome back! Sign in to access your recipes and cooking community.
+      </p>
       <AuthForm mode="signin" />
       <div className="mt-4 text-sm text-gray-700">
-        Don't have an account?{' '}
+                  Don&apos;t have an account?{' '}
         <Link href="/signup" className="text-orange-600 hover:underline">Sign up</Link>
       </div>
     </div>

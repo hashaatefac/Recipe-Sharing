@@ -1,10 +1,9 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import Link from "next/link";
 import { supabase } from "../../lib/supabase";
-import { useSession } from "../components/SessionProvider";
 import { useSearchParams } from "next/navigation";
-import { RecipeGridSkeleton, SearchBarSkeleton, LoadingSpinner } from "../components/Skeleton";
+import { RecipeGridSkeleton } from "../components/Skeleton";
 import Navigation from "../components/Navigation";
 
 interface Recipe {
@@ -19,7 +18,7 @@ interface Recipe {
   };
 }
 
-export default function AllRecipesPage() {
+function RecipesContent() {
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -27,7 +26,6 @@ export default function AllRecipesPage() {
   const [selectedDifficulty, setSelectedDifficulty] = useState("All Difficulties");
   const searchParams = useSearchParams();
   const urlSearchQuery = searchParams.get('search');
-  const { user } = useSession();
   
   console.log('Recipes page: URL searchParams =', searchParams.toString());
   console.log('Recipes page: searchQuery from URL =', urlSearchQuery);
@@ -92,10 +90,6 @@ export default function AllRecipesPage() {
     fetchRecipes();
   }, [searchQuery, selectedCategory, selectedDifficulty]);
 
-  const handleSearch = () => {
-    // This will trigger the useEffect to refetch recipes
-  };
-
   const clearSearch = () => {
     setSearchQuery("");
     setSelectedCategory("All Categories");
@@ -124,37 +118,46 @@ export default function AllRecipesPage() {
               <div className="relative">
                 <input
                   type="text"
+                  placeholder="Search recipes..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search recipes..."
-                  className="w-full pl-4 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                 />
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                </div>
               </div>
             </div>
 
-            {/* Category Dropdown */}
-            <div className="md:w-48">
+            {/* Category Filter */}
+            <div className="w-full md:w-48">
               <select
                 value={selectedCategory}
                 onChange={(e) => setSelectedCategory(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
               >
                 <option value="All Categories">All Categories</option>
                 <option value="Breakfast">Breakfast</option>
                 <option value="Lunch">Lunch</option>
                 <option value="Dinner">Dinner</option>
                 <option value="Dessert">Dessert</option>
-                <option value="Snack">Snack</option>
-                <option value="Beverage">Beverage</option>
+                <option value="Vegetarian">Vegetarian</option>
+                <option value="Quick & Easy">Quick & Easy</option>
+                <option value="Seafood">Seafood</option>
+                <option value="Asian">Asian</option>
+                <option value="Italian">Italian</option>
+                <option value="Other">Other</option>
               </select>
             </div>
 
-            {/* Difficulty Dropdown */}
-            <div className="md:w-48">
+            {/* Difficulty Filter */}
+            <div className="w-full md:w-48">
               <select
                 value={selectedDifficulty}
                 onChange={(e) => setSelectedDifficulty(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
               >
                 <option value="All Difficulties">All Difficulties</option>
                 <option value="Easy">Easy</option>
@@ -162,19 +165,17 @@ export default function AllRecipesPage() {
                 <option value="Hard">Hard</option>
               </select>
             </div>
-          </div>
 
-          {/* Clear Search Button */}
-          {(searchQuery || selectedCategory !== "All Categories" || selectedDifficulty !== "All Difficulties") && (
-            <div className="mt-4">
+            {/* Clear Filters Button */}
+            {(searchQuery || selectedCategory !== "All Categories" || selectedDifficulty !== "All Difficulties") && (
               <button
                 onClick={clearSearch}
-                className="text-orange-500 hover:text-orange-700 font-medium"
+                className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
               >
-                Clear Search
+                Clear
               </button>
-            </div>
-          )}
+            )}
+          </div>
         </div>
 
         {/* Recipes Grid */}
@@ -182,18 +183,16 @@ export default function AllRecipesPage() {
           <RecipeGridSkeleton />
         ) : recipes.length === 0 ? (
           <div className="text-center py-12">
-            <p className="text-gray-600 text-lg">
-              {searchQuery 
-                ? `No recipes found for "${searchQuery}"` 
-                : "No recipes found"}
+            <p className="text-gray-600 text-lg mb-4">
+              {searchQuery ? "No recipes found matching your search." : "No recipes available yet."}
             </p>
-            {searchQuery && (
-              <button
-                onClick={clearSearch}
-                className="mt-4 text-orange-500 hover:text-orange-700 font-medium"
+            {!searchQuery && (
+              <Link
+                href="/recipes/new"
+                className="bg-orange-500 text-white px-6 py-3 rounded-lg hover:bg-orange-600 transition-colors font-semibold"
               >
-                Clear search
-              </button>
+                Create the First Recipe
+              </Link>
             )}
           </div>
         ) : (
@@ -207,13 +206,7 @@ export default function AllRecipesPage() {
                     </Link>
                   </h3>
                   <div className="flex items-center justify-between text-sm text-gray-600 mb-3">
-                    <span>By: {recipe.profiles.username}</span>
                     <span>{recipe.category}</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs text-gray-500">
-                      {new Date(recipe.created_at).toLocaleDateString()}
-                    </span>
                     {recipe.difficulty && (
                       <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                         recipe.difficulty === 'Easy' ? 'bg-green-100 text-green-800' :
@@ -224,6 +217,10 @@ export default function AllRecipesPage() {
                       </span>
                     )}
                   </div>
+                  <div className="flex items-center justify-between text-xs text-gray-500">
+                    <span>By {recipe.profiles.username}</span>
+                    <span>{new Date(recipe.created_at).toLocaleDateString()}</span>
+                  </div>
                 </div>
               </div>
             ))}
@@ -231,5 +228,15 @@ export default function AllRecipesPage() {
         )}
       </main>
     </div>
+  );
+}
+
+export default function AllRecipesPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-gradient-to-br from-orange-50 to-red-50 flex justify-center items-center">
+      <div className="text-orange-500 font-semibold">Loading...</div>
+    </div>}>
+      <RecipesContent />
+    </Suspense>
   );
 } 

@@ -3,7 +3,6 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "../../components/SessionProvider";
 import { supabase } from "../../../lib/supabase";
-import Link from "next/link";
 import Navigation from "../../components/Navigation";
 
 const difficulties = ["Easy", "Medium", "Hard"];

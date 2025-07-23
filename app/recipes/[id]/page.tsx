@@ -1,22 +1,47 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter, useParams } from "next/navigation";
+import { useState, useEffect } from "react";
+import { useParams } from "next/navigation";
 import Link from "next/link";
-import { supabase } from "../../../lib/supabase";
 import { useSession } from "../../components/SessionProvider";
-import { Heart } from "lucide-react";
-import { RecipeDetailSkeleton, LoadingSpinner } from "../../components/Skeleton";
+import { supabase } from "../../../lib/supabase";
 import Navigation from "../../components/Navigation";
+import { LoadingSpinner } from "../../components/Skeleton";
+
+interface Recipe {
+  id: string;
+  title: string;
+  ingredients: string;
+  instructions: string;
+  cooking_time?: number;
+  difficulty: string;
+  category: string;
+  image_url?: string;
+  user_id: string;
+  created_at: string;
+  profiles?: {
+    username: string;
+  };
+}
+
+interface Comment {
+  id: string;
+  content: string;
+  user_id: string;
+  recipe_id: string;
+  created_at: string;
+  profiles?: {
+    username: string;
+  };
+}
 
 export default function RecipeDetailPage() {
-  const router = useRouter();
   const params = useParams();
   const recipeId = params?.id as string;
   const { user } = useSession();
-  const [recipe, setRecipe] = useState<any>(null);
+  const [recipe, setRecipe] = useState<Recipe | null>(null);
   const [loading, setLoading] = useState(true);
-  const [comments, setComments] = useState<any[]>([]);
+  const [comments, setComments] = useState<Comment[]>([]);
   const [commentInput, setCommentInput] = useState("");
   const [commentLoading, setCommentLoading] = useState(false);
   const [commentsLoading, setCommentsLoading] = useState(true);
@@ -99,6 +124,7 @@ export default function RecipeDetailPage() {
             
             return {
               ...comment,
+              recipe_id: recipeId,
               profiles: { username: profileData?.username || 'Unknown' }
             };
           })
@@ -177,7 +203,7 @@ export default function RecipeDetailPage() {
       <div className="min-h-screen bg-gradient-to-br from-orange-50 to-red-50">
         <Navigation />
         <main className="max-w-4xl mx-auto px-4 py-8">
-          <RecipeDetailSkeleton />
+          <LoadingSpinner />
         </main>
       </div>
     );
@@ -189,13 +215,13 @@ export default function RecipeDetailPage() {
         <main className="max-w-4xl mx-auto px-4 py-8">
           <div className="text-center py-12">
             <h1 className="text-2xl font-bold text-gray-900 mb-4">Recipe Not Found</h1>
-            <p className="text-gray-600 mb-6">The recipe you're looking for doesn't exist or has been removed.</p>
-            <Link
-              href="/recipes"
-              className="bg-orange-500 text-white px-6 py-3 rounded-lg hover:bg-orange-600 transition-colors font-semibold"
-            >
-              Browse All Recipes
-            </Link>
+            <p className="text-gray-600 mb-6">The recipe you&apos;re looking for doesn&apos;t exist or has been removed.</p>
+                          <Link
+                href="/recipes"
+                className="bg-orange-500 text-white px-6 py-3 rounded-lg hover:bg-orange-600 transition-colors font-semibold"
+              >
+                Browse All Recipes
+              </Link>
           </div>
         </main>
       </div>
@@ -206,7 +232,7 @@ export default function RecipeDetailPage() {
     <div className="min-h-screen bg-gradient-to-br from-orange-50 to-red-50">
       <Navigation />
       <main className="max-w-2xl mx-auto px-4 py-12">
-        <Link href="/recipes" className="text-orange-600 hover:underline mb-4 inline-block">&larr; Back to All Recipes</Link>
+                 <Link href="/recipes" className="text-orange-600 hover:underline mb-4 inline-block">&larr; Back to All Recipes</Link>
         <div className="bg-white p-8 rounded-xl shadow-md">
           {recipe.image_url ? (
             <div>
@@ -247,7 +273,7 @@ export default function RecipeDetailPage() {
                 className={`focus:outline-none ${userLiked ? "text-red-500" : "text-gray-400"}`}
                 title={user ? (userLiked ? "Unlike" : "Like") : "Sign in to like"}
               >
-                <Heart className={`h-5 w-5 ${userLiked ? "fill-red-500" : ""}`} />
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill={userLiked ? "red" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`h-5 w-5 ${userLiked ? "fill-red-500" : ""}`}><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
               </button>
               <span className="text-xs text-gray-700">{likes}</span>
             </span>
@@ -314,6 +340,7 @@ export default function RecipeDetailPage() {
                         
                         return {
                           ...comment,
+                          recipe_id: recipeId,
                           profiles: { username: profileData?.username || 'Unknown' }
                         };
                       })

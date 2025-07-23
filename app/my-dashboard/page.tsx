@@ -79,7 +79,9 @@ export default function MyDashboardPage() {
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-3xl font-bold text-gray-900 mb-2">My Dashboard</h1>
-            <p className="text-gray-600">Manage your recipes and cooking journey</p>
+            <p className="text-gray-600 mb-4">
+              Welcome to your dashboard! Here you can manage your recipes and track your cooking journey.
+            </p>
           </div>
           <Link
             href="/recipes/new"
@@ -93,7 +95,7 @@ export default function MyDashboardPage() {
           <RecipeGridSkeleton />
         ) : recipes.length === 0 ? (
           <div className="text-center py-12">
-            <p className="text-gray-600 text-lg mb-4">You haven't created any recipes yet.</p>
+            <p className="text-gray-600 text-lg mb-4">You haven&apos;t created any recipes yet.</p>
             <Link
               href="/recipes/new"
               className="bg-orange-500 text-white px-6 py-3 rounded-lg hover:bg-orange-600 transition-colors font-semibold"

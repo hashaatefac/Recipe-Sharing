@@ -1,8 +1,7 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Image from "next/image";
 import { Search, Heart, Clock, ChefHat } from "lucide-react";
-import { supabase } from "../lib/supabase";
 import Link from "next/link";
 import SignOutButton from "./components/SignOutButton";
 import { useSession } from "./components/SessionProvider";

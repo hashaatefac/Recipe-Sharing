@@ -1,12 +1,11 @@
 "use client";
-import { useEffect, useState, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useSession } from "../components/SessionProvider";
 import { supabase } from "../../lib/supabase";
-import Link from "next/link";
-import SignOutButton from "../components/SignOutButton";
-import { ProfileSkeleton, LoadingSpinner } from "../components/Skeleton";
 import Navigation from "../components/Navigation";
+import { LoadingSpinner } from "../components/Skeleton";
 
 export default function ProfilePage() {
   const { user, isLoading: isSessionLoading } = useSession();
@@ -18,38 +17,37 @@ export default function ProfilePage() {
   const [bio, setBio] = useState('');
   const [message, setMessage] = useState('');
 
-  const getProfile = useCallback(async () => {
-    if (!user) return;
-    try {
-      setLoading(true);
-      const { data, error } = await supabase
-        .from('profiles')
-        .select(`username, full_name, bio`)
-        .eq('id', user.id)
-        .single();
-
-      if (error) throw error;
-      if (data) {
-        setUsername(data.username || '');
-        setFullName(data.full_name || '');
-        setBio(data.bio || '');
-      }
-    } catch (error: any) {
-      setMessage(`Error: ${error.message}`);
-    } finally {
-      setLoading(false);
-    }
-  }, [user]);
-
   useEffect(() => {
     if (!isSessionLoading && !user) {
       router.replace('/signin');
     } else if (user) {
+      const getProfile = async () => {
+        if (!user) return;
+        try {
+          setLoading(true);
+          const { data, error } = await supabase
+            .from('profiles')
+            .select(`username, full_name, bio`)
+            .eq('id', user.id)
+            .single();
+
+          if (error) throw error;
+          if (data) {
+            setUsername(data.username || '');
+            setFullName(data.full_name || '');
+            setBio(data.bio || '');
+          }
+        } catch (error: unknown) {
+          setMessage(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        } finally {
+          setLoading(false);
+        }
+      };
       getProfile();
     }
-  }, [user, isSessionLoading, router, getProfile]);
+  }, [user, isSessionLoading, router]);
   
-  async function updateProfile(event: React.FormEvent<HTMLFormElement>) {
+  const updateProfile = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!user) return;
 
@@ -64,12 +62,12 @@ export default function ProfilePage() {
       });
       if (error) throw error;
       setMessage('Profile updated successfully!');
-    } catch (error: any) {
-      setMessage(`Error: ${error.message}`);
+    } catch (error: unknown) {
+      setMessage(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setLoading(false);
     }
-  }
+  };
 
   if (isSessionLoading || loading) {
     return (
@@ -110,7 +108,7 @@ export default function ProfilePage() {
         </div>
 
         {loading ? (
-          <ProfileSkeleton />
+          <LoadingSpinner />
         ) : (
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
             <form onSubmit={updateProfile} className="space-y-6">

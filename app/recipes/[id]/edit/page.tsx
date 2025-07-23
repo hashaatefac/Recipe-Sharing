@@ -6,6 +6,18 @@ import { supabase } from "../../../../lib/supabase";
 import Link from "next/link";
 import Navigation from "../../../components/Navigation";
 
+interface Recipe {
+  id: string;
+  title: string;
+  ingredients: string;
+  instructions: string;
+  cooking_time?: number;
+  difficulty: string;
+  category: string;
+  image_url?: string;
+  user_id: string;
+}
+
 const difficulties = ["Easy", "Medium", "Hard"];
 const categories = [
   "Breakfast",
@@ -36,7 +48,7 @@ export default function EditRecipePage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
-  const [recipe, setRecipe] = useState<any>(null);
+  const [recipe, setRecipe] = useState<Recipe | null>(null);
 
   useEffect(() => {
     if (!recipeId) return;
