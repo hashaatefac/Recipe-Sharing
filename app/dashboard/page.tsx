@@ -2,21 +2,23 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "../../lib/supabase";
-import { useSupabaseUser } from "../hooks/useSupabaseUser";
+import { useSession } from "../components/SessionProvider";
 
 export default function DashboardPage() {
-  const user = useSupabaseUser();
+  const { user, isLoading } = useSession();
   const router = useRouter();
   const [recipes, setRecipes] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (user === null) {
+    if (isLoading) return; // Wait for session to load
+    
+    if (!user) {
       // Not logged in, redirect
       router.replace("/signin");
       return;
     }
-    if (!user) return; // Wait for user to resolve
+    
     async function fetchRecipes() {
       setLoading(true);
       const { data, error } = await supabase
@@ -27,7 +29,15 @@ export default function DashboardPage() {
       setLoading(false);
     }
     fetchRecipes();
-  }, [user, router]);
+  }, [user, isLoading, router]);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-orange-50 flex justify-center items-center">
+        <div className="text-orange-500 font-semibold">Loading...</div>
+      </div>
+    );
+  }
 
   if (!user) return null; // Don't render until user is resolved
 
