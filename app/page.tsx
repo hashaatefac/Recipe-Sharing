@@ -1,5 +1,11 @@
+"use client";
+import { useEffect, useState } from "react";
 import Image from "next/image";
-import { Search, Heart, Clock, Users, ChefHat, UtensilsCrossed } from "lucide-react";
+import { Search, Heart, Clock, ChefHat } from "lucide-react";
+import { supabase } from "../lib/supabase";
+import Link from "next/link";
+import SignOutButton from "./components/SignOutButton";
+import { useSession } from "./components/SessionProvider";
 
 // Mock data for featured recipes
 const featuredRecipes = [
@@ -55,6 +61,10 @@ const categories = [
 ];
 
 export default function Home() {
+  const { user } = useSession();
+  const [searchQuery, setSearchQuery] = useState("");
+  // Remove Supabase connection test UI and logic
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 to-red-50">
       {/* Navigation */}
@@ -67,17 +77,18 @@ export default function Home() {
             </div>
             <div className="hidden md:flex items-center space-x-8">
               <a href="#" className="text-gray-700 hover:text-orange-500 transition-colors">Home</a>
-              <a href="#" className="text-gray-700 hover:text-orange-500 transition-colors">Recipes</a>
+              <Link href="/recipes" className="text-gray-700 hover:text-orange-500 transition-colors">Recipes</Link>
               <a href="#" className="text-gray-700 hover:text-orange-500 transition-colors">Categories</a>
               <a href="#" className="text-gray-700 hover:text-orange-500 transition-colors">About</a>
             </div>
             <div className="flex items-center space-x-4">
-              <button className="text-gray-700 hover:text-orange-500 transition-colors">
-                Sign In
-              </button>
-              <button className="bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600 transition-colors">
-                Sign Up
-              </button>
+              {!user && (
+                <>
+                  <Link href="/signin" className="text-gray-700 hover:text-orange-500 transition-colors px-3 py-2">Sign In</Link>
+                  <Link href="/signup" className="bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600 transition-colors">Sign Up</Link>
+                </>
+              )}
+              {user && <SignOutButton />}
             </div>
           </div>
         </div>
@@ -102,6 +113,8 @@ export default function Home() {
               <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
               <input
                 type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search for recipes, ingredients, or chefs..."
                 className="w-full pl-12 pr-4 py-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
               />
@@ -109,12 +122,21 @@ export default function Home() {
           </div>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <button className="bg-orange-500 text-white px-8 py-3 rounded-lg hover:bg-orange-600 transition-colors font-semibold">
-              Share Your Recipe
-            </button>
-            <button className="border border-orange-500 text-orange-500 px-8 py-3 rounded-lg hover:bg-orange-50 transition-colors font-semibold">
+            {user ? (
+              <Link href="/recipes/new" className="bg-orange-500 text-white px-8 py-3 rounded-lg hover:bg-orange-600 transition-colors font-semibold text-center">
+                Share Your Recipe
+              </Link>
+            ) : (
+              <Link href="/signup" className="bg-orange-500 text-white px-8 py-3 rounded-lg hover:bg-orange-600 transition-colors font-semibold text-center">
+                Share Your Recipe
+              </Link>
+            )}
+            <Link 
+              href={searchQuery ? `/recipes?search=${encodeURIComponent(searchQuery.trim())}` : "/recipes"} 
+              className="border border-orange-500 text-orange-500 px-8 py-3 rounded-lg hover:bg-orange-50 transition-colors font-semibold text-center"
+            >
               Browse Recipes
-            </button>
+            </Link>
           </div>
         </div>
       </section>

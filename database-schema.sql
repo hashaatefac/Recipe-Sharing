@@ -8,7 +8,8 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE TABLE profiles (
   id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
   username VARCHAR(50) UNIQUE,
-  full_name VARCHAR(100),
+  full_name VARCHAR(100), -- This column is nullable
+  bio TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -16,7 +17,6 @@ CREATE TABLE profiles (
 -- Create recipes table
 CREATE TABLE recipes (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
   title VARCHAR(255) NOT NULL,
   ingredients TEXT NOT NULL,
@@ -24,6 +24,7 @@ CREATE TABLE recipes (
   cooking_time INTEGER, -- in minutes
   difficulty VARCHAR(20) CHECK (difficulty IN ('Easy', 'Medium', 'Hard')),
   category VARCHAR(50),
+  image_url TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -73,4 +74,19 @@ CREATE TRIGGER update_profiles_updated_at BEFORE UPDATE ON profiles
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 CREATE TRIGGER update_recipes_updated_at BEFORE UPDATE ON recipes
-  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column(); 
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+-- Function to create a new profile for each new user
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS TRIGGER AS $$
+BEGIN
+  INSERT INTO public.profiles (id, username, full_name)
+  VALUES (NEW.id, NEW.raw_user_meta_data->>'username', NEW.raw_user_meta_data->>'full_name');
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Trigger to call the function when a new user is created
+CREATE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
+  FOR EACH ROW EXECUTE FUNCTION public.handle_new_user(); 
