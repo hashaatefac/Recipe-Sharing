@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { SessionProvider } from "./components/SessionProvider";
 
+// Updated layout for Vercel deployment
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
