@@ -13,6 +13,7 @@ interface Recipe {
   created_at: string;
   user_id: string;
   difficulty?: string;
+  image_url?: string;
   profiles: {
     username: string;
   };
@@ -45,7 +46,7 @@ function RecipesContent() {
       
       let query = supabase
         .from("recipes")
-        .select(`id, title, category, created_at, user_id, difficulty`)
+        .select(`id, title, category, created_at, user_id, difficulty, image_url`)
         .order("created_at", { ascending: false });
       
       // Add search filter if search query exists
@@ -199,6 +200,32 @@ function RecipesContent() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {recipes.map((recipe) => (
               <div key={recipe.id} className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow">
+                {/* Recipe Image */}
+                {recipe.image_url ? (
+                  <div className="relative h-48 overflow-hidden">
+                    <img 
+                      src={recipe.image_url} 
+                      alt={recipe.title} 
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        const img = e.currentTarget as HTMLImageElement;
+                        const placeholder = img.nextElementSibling as HTMLElement;
+                        if (img && placeholder) {
+                          img.style.display = 'none';
+                          placeholder.style.display = 'flex';
+                        }
+                      }}
+                    />
+                    <div className="absolute inset-0 bg-orange-100 flex items-center justify-center text-orange-300 text-4xl" style={{display: 'none'}}>
+                      <span role="img" aria-label="No image">🍽️</span>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="h-48 bg-orange-100 flex items-center justify-center text-orange-300 text-4xl">
+                    <span role="img" aria-label="No image">🍽️</span>
+                  </div>
+                )}
+                
                 <div className="p-6">
                   <h3 className="text-xl font-semibold text-gray-900 mb-2">
                     <Link href={`/recipes/${recipe.id}`} className="hover:text-orange-500 transition-colors">

@@ -146,7 +146,25 @@ export default function AddRecipePage() {
           </div>
           <div>
             <label htmlFor="imageUrl" className="block text-sm font-medium text-gray-700">Image URL</label>
-            <input id="imageUrl" type="url" value={imageUrl} onChange={e => setImageUrl(e.target.value)} placeholder="https://..." className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm" />
+            <input 
+              id="imageUrl" 
+              type="url" 
+              value={imageUrl} 
+              onChange={e => setImageUrl(e.target.value)} 
+              placeholder="https://images.unsplash.com/photo-..." 
+              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm" 
+            />
+            <p className="mt-1 text-xs text-gray-500">
+              Optional: Add a direct link to an image (e.g., from Unsplash, Imgur, etc.)
+            </p>
+            <div className="mt-2 text-xs text-gray-400">
+              <p>Sample URLs you can use:</p>
+              <ul className="list-disc list-inside mt-1 space-y-1">
+                <li>https://images.unsplash.com/photo-1565299624942-b28ea40a0ca6?w=800</li>
+                <li>https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=800</li>
+                <li>https://images.unsplash.com/photo-1473093295043-cdd812d0e601?w=800</li>
+              </ul>
+            </div>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>

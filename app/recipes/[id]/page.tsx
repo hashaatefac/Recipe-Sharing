@@ -234,8 +234,16 @@ export default function RecipeDetailPage() {
       <main className="max-w-2xl mx-auto px-4 py-12">
                  <Link href="/recipes" className="text-orange-600 hover:underline mb-4 inline-block">&larr; Back to All Recipes</Link>
         <div className="bg-white p-8 rounded-xl shadow-md">
+          {/* Debug information - remove this in production */}
+          {process.env.NODE_ENV === 'development' && (
+            <div className="mb-4 p-2 bg-gray-100 rounded text-xs">
+              <p>Debug: Image URL = {recipe.image_url || 'null'}</p>
+              <p>Debug: Recipe ID = {recipe.id}</p>
+            </div>
+          )}
+          
           {recipe.image_url ? (
-            <div>
+            <div className="relative">
               <img 
                 src={recipe.image_url} 
                 alt={recipe.title} 
@@ -248,6 +256,9 @@ export default function RecipeDetailPage() {
                     img.style.display = 'none';
                     placeholder.style.display = 'flex';
                   }
+                }}
+                onLoad={() => {
+                  console.log('Image loaded successfully:', recipe.image_url);
                 }}
               />
               <div className="w-full h-64 bg-orange-100 flex items-center justify-center rounded mb-6 text-orange-300 text-6xl" style={{display: 'none'}}>
