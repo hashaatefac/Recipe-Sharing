@@ -48,8 +48,6 @@ export default function RecipeDetailPage() {
   const [likes, setLikes] = useState(0);
   const [userLiked, setUserLiked] = useState(false);
   const [likeLoading, setLikeLoading] = useState(false);
-  const [imageLoadAttempts, setImageLoadAttempts] = useState(0);
-  const maxImageAttempts = 3;
 
   // Function to get a reliable image URL
   const getReliableImageUrl = (originalUrl: string | undefined) => {
@@ -60,29 +58,25 @@ export default function RecipeDetailPage() {
       return originalUrl;
     }
     
-    // For Unsplash URLs, try different formats based on attempt number
+    // For Unsplash URLs, try a simpler approach
     if (originalUrl.includes('unsplash.com')) {
-      const url = new URL(originalUrl);
-      
-      if (imageLoadAttempts === 0) {
-        // First attempt: original URL
-        return originalUrl;
-      } else if (imageLoadAttempts === 1) {
-        // Second attempt: with format parameters
-        url.searchParams.set('auto', 'format');
-        url.searchParams.set('fit', 'crop');
-        url.searchParams.set('w', '800');
-        url.searchParams.set('q', '80');
-        url.searchParams.set('fm', 'jpg');
-        return url.toString();
-      } else {
-        // Third attempt: try a different Unsplash image
-        return 'https://images.unsplash.com/photo-1565299624942-b28ea40a0ca6?auto=format&fit=crop&w=800&q=80&fm=jpg';
-      }
+      // Use a simple, reliable Unsplash image as fallback
+      return 'https://images.unsplash.com/photo-1565299624942-b28ea40a0ca6?auto=format&fit=crop&w=800&q=80&fm=jpg';
     }
     
     // For other external URLs, return as is
     return originalUrl;
+  };
+
+  // Function to get a placeholder image
+  const getPlaceholderImage = () => {
+    // Return a simple SVG placeholder
+    return `data:image/svg+xml;base64,${btoa(`
+      <svg width="800" height="400" xmlns="http://www.w3.org/2000/svg">
+        <rect width="100%" height="100%" fill="#fef3c7"/>
+        <text x="50%" y="50%" font-family="Arial, sans-serif" font-size="24" fill="#f59e0b" text-anchor="middle" dy=".3em">🍽️ Recipe Image</text>
+      </svg>
+    `)}`;
   };
 
   useEffect(() => {
@@ -278,91 +272,62 @@ export default function RecipeDetailPage() {
             <p>Debug: Has Image = {recipe.image_url ? 'Yes' : 'No'}</p>
             <button 
               onClick={() => {
-                console.log('🔍 Testing image URL:', recipe.image_url);
+                console.log('🔍 Testing image URLs:');
+                console.log('🔍 Original URL:', recipe.image_url);
                 console.log('🔍 Reliable URL:', getReliableImageUrl(recipe.image_url));
-                if (recipe.image_url) {
-                  fetch(recipe.image_url)
-                    .then(response => {
-                      if (response.ok) {
-                        console.log('✅ Image URL is accessible');
-                        const debugDiv = document.querySelector('.debug-info');
-                        if (debugDiv) {
-                          debugDiv.innerHTML += `<p style="color: green;">✅ Image URL is accessible</p>`;
-                        }
-                      } else {
-                        console.error('❌ Image URL returned status:', response.status);
-                        const debugDiv = document.querySelector('.debug-info');
-                        if (debugDiv) {
-                          debugDiv.innerHTML += `<p style="color: red;">❌ Image URL returned status: ${response.status}</p>`;
-                        }
-                      }
-                    })
-                    .catch(error => {
-                      console.error('❌ Image URL fetch error:', error);
-                      const debugDiv = document.querySelector('.debug-info');
-                      if (debugDiv) {
-                        debugDiv.innerHTML += `<p style="color: red;">❌ Image URL fetch error: ${error.message}</p>`;
-                      }
-                    });
+                console.log('🔍 Placeholder URL:', getPlaceholderImage().substring(0, 50) + '...');
+                
+                const debugDiv = document.querySelector('.debug-info');
+                if (debugDiv) {
+                  debugDiv.innerHTML += `<p style="color: blue;">🔍 Original URL: ${recipe.image_url}</p>`;
+                  debugDiv.innerHTML += `<p style="color: blue;">🔍 Reliable URL: ${getReliableImageUrl(recipe.image_url)}</p>`;
+                  debugDiv.innerHTML += `<p style="color: blue;">🔍 Using placeholder as fallback</p>`;
                 }
               }}
               className="mt-2 px-2 py-1 bg-blue-500 text-white rounded text-xs"
             >
-              Test Image URL
+              Test Image URLs
             </button>
           </div>
           
           {recipe.image_url ? (
             <div className="relative">
               <img 
-                src={getReliableImageUrl(recipe.image_url) || recipe.image_url} 
+                src={getReliableImageUrl(recipe.image_url) || getPlaceholderImage()} 
                 alt={recipe.title} 
                 className="w-full h-64 object-cover rounded mb-6"
                 onError={(e) => {
-                  console.error('❌ Image failed to load:', recipe.image_url);
+                  console.error('❌ Image failed to load, using placeholder');
+                  console.error('❌ Original URL:', recipe.image_url);
                   console.error('❌ Reliable URL:', getReliableImageUrl(recipe.image_url));
-                  console.error('❌ Attempt:', imageLoadAttempts + 1);
-                  console.error('❌ Error details:', e);
                   console.error('❌ Recipe ID:', recipe.id);
                   console.error('❌ Recipe title:', recipe.title);
                   
                   // Show error in debug info
                   const debugDiv = document.querySelector('.debug-info');
                   if (debugDiv) {
-                    debugDiv.innerHTML += `<p style="color: red;">❌ Image failed to load: ${recipe.image_url}</p>`;
+                    debugDiv.innerHTML += `<p style="color: red;">❌ Image failed to load, using placeholder</p>`;
+                    debugDiv.innerHTML += `<p style="color: red;">❌ Original URL: ${recipe.image_url}</p>`;
                     debugDiv.innerHTML += `<p style="color: red;">❌ Reliable URL: ${getReliableImageUrl(recipe.image_url)}</p>`;
-                    debugDiv.innerHTML += `<p style="color: red;">❌ Attempt: ${imageLoadAttempts + 1}</p>`;
                   }
                   
-                  // Try fallback if we haven't exceeded max attempts
-                  if (imageLoadAttempts < maxImageAttempts - 1) {
-                    setImageLoadAttempts(prev => prev + 1);
-                    console.log('🔄 Trying fallback image...');
-                  } else {
-                    // Show placeholder after all attempts fail
-                    const img = e.currentTarget as HTMLImageElement;
-                    const placeholder = img.nextElementSibling as HTMLElement;
-                    if (img && placeholder) {
-                      img.style.display = 'none';
-                      placeholder.style.display = 'flex';
-                    }
-                  }
+                  // Use placeholder image
+                  const img = e.currentTarget as HTMLImageElement;
+                  img.src = getPlaceholderImage();
+                  img.onerror = null; // Prevent infinite loop
                 }}
                 onLoad={() => {
-                  console.log('✅ Image loaded successfully:', recipe.image_url);
-                  console.log('✅ Reliable URL:', getReliableImageUrl(recipe.image_url));
+                  console.log('✅ Image loaded successfully');
+                  console.log('✅ URL:', recipe.image_url);
                   
                   // Show success in debug info
                   const debugDiv = document.querySelector('.debug-info');
                   if (debugDiv) {
-                    debugDiv.innerHTML += `<p style="color: green;">✅ Image loaded: ${recipe.image_url}</p>`;
-                    debugDiv.innerHTML += `<p style="color: green;">✅ Reliable URL: ${getReliableImageUrl(recipe.image_url)}</p>`;
+                    debugDiv.innerHTML += `<p style="color: green;">✅ Image loaded successfully</p>`;
+                    debugDiv.innerHTML += `<p style="color: green;">✅ URL: ${recipe.image_url}</p>`;
                   }
                 }}
               />
-              <div className="w-full h-64 bg-orange-100 flex items-center justify-center rounded mb-6 text-orange-300 text-6xl" style={{display: 'none'}}>
-                <span role="img" aria-label="No image">🍽️</span>
-              </div>
             </div>
           ) : (
             <div className="w-full h-64 bg-orange-100 flex items-center justify-center rounded mb-6 text-orange-300 text-6xl">
