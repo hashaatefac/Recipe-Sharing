@@ -30,7 +30,7 @@ export default function AddRecipePage() {
   const [category, setCategory] = useState(categories[0]);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
-  const [imageUrl, setImageUrl] = useState("https://images.unsplash.com/photo-1565299624942-b28ea40a0ca6?auto=format&fit=crop&w=800&q=80");
+  const [imageUrl, setImageUrl] = useState("https://images.unsplash.com/photo-1565299624942-b28ea40a0ca6?auto=format&fit=crop&w=800&q=80&fm=jpg");
 
   if (isLoading) {
     return (
@@ -160,9 +160,9 @@ export default function AddRecipePage() {
             <div className="mt-2 text-xs text-gray-400">
               <p>Sample URLs you can use:</p>
               <ul className="list-disc list-inside mt-1 space-y-1">
-                <li>https://images.unsplash.com/photo-1565299624942-b28ea40a0ca6?auto=format&fit=crop&w=800&q=80</li>
-                <li>https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?auto=format&fit=crop&w=800&q=80</li>
-                <li>https://images.unsplash.com/photo-1473093295043-cdd812d0e601?auto=format&fit=crop&w=800&q=80</li>
+                <li>https://images.unsplash.com/photo-1565299624942-b28ea40a0ca6?auto=format&fit=crop&w=800&q=80&fm=jpg</li>
+                <li>https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?auto=format&fit=crop&w=800&q=80&fm=jpg</li>
+                <li>https://images.unsplash.com/photo-1473093295043-cdd812d0e601?auto=format&fit=crop&w=800&q=80&fm=jpg</li>
               </ul>
             </div>
           </div>
