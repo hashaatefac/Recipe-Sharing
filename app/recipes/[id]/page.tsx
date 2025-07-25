@@ -235,11 +235,44 @@ export default function RecipeDetailPage() {
                  <Link href="/recipes" className="text-orange-600 hover:underline mb-4 inline-block">&larr; Back to All Recipes</Link>
         <div className="bg-white p-8 rounded-xl shadow-md">
           {/* Debug information - remove this in production */}
-          <div className="mb-4 p-2 bg-gray-100 rounded text-xs">
+          <div className="mb-4 p-2 bg-gray-100 rounded text-xs debug-info">
             <p>Debug: Image URL = {recipe.image_url || 'null'}</p>
             <p>Debug: Recipe ID = {recipe.id}</p>
             <p>Debug: Recipe Title = {recipe.title}</p>
             <p>Debug: Has Image = {recipe.image_url ? 'Yes' : 'No'}</p>
+            <button 
+              onClick={() => {
+                console.log('🔍 Testing image URL:', recipe.image_url);
+                if (recipe.image_url) {
+                  fetch(recipe.image_url)
+                    .then(response => {
+                      if (response.ok) {
+                        console.log('✅ Image URL is accessible');
+                        const debugDiv = document.querySelector('.debug-info');
+                        if (debugDiv) {
+                          debugDiv.innerHTML += `<p style="color: green;">✅ Image URL is accessible</p>`;
+                        }
+                      } else {
+                        console.error('❌ Image URL returned status:', response.status);
+                        const debugDiv = document.querySelector('.debug-info');
+                        if (debugDiv) {
+                          debugDiv.innerHTML += `<p style="color: red;">❌ Image URL returned status: ${response.status}</p>`;
+                        }
+                      }
+                    })
+                    .catch(error => {
+                      console.error('❌ Image URL fetch error:', error);
+                      const debugDiv = document.querySelector('.debug-info');
+                      if (debugDiv) {
+                        debugDiv.innerHTML += `<p style="color: red;">❌ Image URL fetch error: ${error.message}</p>`;
+                      }
+                    });
+                }
+              }}
+              className="mt-2 px-2 py-1 bg-blue-500 text-white rounded text-xs"
+            >
+              Test Image URL
+            </button>
           </div>
           
           {recipe.image_url ? (
@@ -249,7 +282,17 @@ export default function RecipeDetailPage() {
                 alt={recipe.title} 
                 className="w-full h-64 object-cover rounded mb-6"
                 onError={(e) => {
-                  console.log('Image failed to load:', recipe.image_url);
+                  console.error('❌ Image failed to load:', recipe.image_url);
+                  console.error('❌ Error details:', e);
+                  console.error('❌ Recipe ID:', recipe.id);
+                  console.error('❌ Recipe title:', recipe.title);
+                  
+                  // Show error in debug info
+                  const debugDiv = document.querySelector('.debug-info');
+                  if (debugDiv) {
+                    debugDiv.innerHTML += `<p style="color: red;">❌ Image failed to load: ${recipe.image_url}</p>`;
+                  }
+                  
                   const img = e.currentTarget as HTMLImageElement;
                   const placeholder = img.nextElementSibling as HTMLElement;
                   if (img && placeholder) {
@@ -258,7 +301,13 @@ export default function RecipeDetailPage() {
                   }
                 }}
                 onLoad={() => {
-                  console.log('Image loaded successfully:', recipe.image_url);
+                  console.log('✅ Image loaded successfully:', recipe.image_url);
+                  
+                  // Show success in debug info
+                  const debugDiv = document.querySelector('.debug-info');
+                  if (debugDiv) {
+                    debugDiv.innerHTML += `<p style="color: green;">✅ Image loaded: ${recipe.image_url}</p>`;
+                  }
                 }}
               />
               <div className="w-full h-64 bg-orange-100 flex items-center justify-center rounded mb-6 text-orange-300 text-6xl" style={{display: 'none'}}>
