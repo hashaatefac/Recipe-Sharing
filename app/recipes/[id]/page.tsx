@@ -55,8 +55,8 @@ export default function RecipeDetailPage() {
     
     // If it's an Unsplash URL, try a more reliable one
     if (originalUrl.includes('unsplash.com')) {
-      // Use a different, more reliable Unsplash URL
-      return 'https://images.unsplash.com/photo-1565299624942-b28ea40a0ca6?auto=format&fit=crop&w=800&q=80&fm=jpg';
+      // Use a more reliable image source
+      return 'https://picsum.photos/800/400?random=4';
     }
     
     return originalUrl;
@@ -65,9 +65,9 @@ export default function RecipeDetailPage() {
   // Function to get a reliable fallback image URL
   const getFallbackImageUrl = () => {
     const fallbackUrls = [
-      'https://images.unsplash.com/photo-1565299624942-b28ea40a0ca6?auto=format&fit=crop&w=800&q=80&fm=jpg',
-      'https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?auto=format&fit=crop&w=800&q=80&fm=jpg',
-      'https://images.unsplash.com/photo-1473093295043-cdd812d0e601?auto=format&fit=crop&w=800&q=80&fm=jpg'
+      'https://picsum.photos/800/400?random=1',
+      'https://picsum.photos/800/400?random=2',
+      'https://picsum.photos/800/400?random=3'
     ];
     
     // Return a random fallback URL
