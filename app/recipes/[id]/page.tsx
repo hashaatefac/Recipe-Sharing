@@ -70,13 +70,8 @@ export default function RecipeDetailPage() {
 
   // Function to get a placeholder image
   const getPlaceholderImage = () => {
-    // Return a simple SVG placeholder
-    return `data:image/svg+xml;base64,${btoa(`
-      <svg width="800" height="400" xmlns="http://www.w3.org/2000/svg">
-        <rect width="100%" height="100%" fill="#fef3c7"/>
-        <text x="50%" y="50%" font-family="Arial, sans-serif" font-size="24" fill="#f59e0b" text-anchor="middle" dy=".3em">🍽️ Recipe Image</text>
-      </svg>
-    `)}`;
+    // Return a simple data URL for a placeholder
+    return 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAwIiBoZWlnaHQ9IjQwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZmVmM2M3Ii8+CiAgPHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIyNCIgZmlsbD0iI2Y1OWUwYiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPvCfh6nwn4epIFJlY2lwZSBJbWFnZTwvdGV4dD4KPC9zdmc+';
   };
 
   useEffect(() => {
