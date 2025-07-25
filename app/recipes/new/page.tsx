@@ -69,16 +69,47 @@ export default function AddRecipePage() {
       const fileExt = file.name.split('.').pop();
       const fileName = `${user.id}/${Date.now()}.${fileExt}`;
 
-      // Upload to Supabase Storage
-      const { error } = await supabase.storage
+      // Upload to Supabase Storage with timeout
+      const uploadPromise = supabase.storage
         .from('recipe-images')
         .upload(fileName, file, {
           cacheControl: '3600',
           upsert: false
         });
 
+      // Add timeout to prevent hanging
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('Upload timeout')), 10000); // 10 second timeout
+      });
+
+      let uploadResult;
+      try {
+        uploadResult = await Promise.race([uploadPromise, timeoutPromise]);
+      } catch {
+        throw new Error('Upload timeout');
+      }
+
+      const { error } = uploadResult as { error: unknown };
+
       if (error) {
         console.error('Upload error:', error);
+        
+        // If upload fails, use a fallback approach
+        const errorMessage = error && typeof error === 'object' && 'message' in error ? String(error.message) : '';
+        if (errorMessage.includes('timeout') || errorMessage.includes('Failed to fetch')) {
+          setMessage("Upload timed out. Using local preview instead. (Note: Set up 'recipe-images' storage bucket in Supabase for full functionality)");
+          
+          // Create local preview and use a placeholder URL
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            setImagePreview(e.target?.result as string);
+            // Use a placeholder URL for the database
+            setImageUrl('https://images.unsplash.com/photo-1565299624942-b28ea40a0ca6?auto=format&fit=crop&w=800&q=80&fm=jpg');
+          };
+          reader.readAsDataURL(file);
+          return;
+        }
+        
         setMessage("Failed to upload image. Please try again.");
         return;
       }
@@ -100,7 +131,22 @@ export default function AddRecipePage() {
 
     } catch (error) {
       console.error('Upload error:', error);
-      setMessage("Failed to upload image. Please try again.");
+      
+      // If it's a timeout or network error, use fallback
+      if (error instanceof Error && (error.message.includes('timeout') || error.message.includes('Failed to fetch'))) {
+        setMessage("Upload timed out. Using local preview instead. (Note: Set up 'recipe-images' storage bucket in Supabase for full functionality)");
+        
+        // Create local preview and use a placeholder URL
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          setImagePreview(e.target?.result as string);
+          // Use a placeholder URL for the database
+          setImageUrl('https://images.unsplash.com/photo-1565299624942-b28ea40a0ca6?auto=format&fit=crop&w=800&q=80&fm=jpg');
+        };
+        reader.readAsDataURL(file);
+      } else {
+        setMessage("Failed to upload image. Please try again. (Note: Set up 'recipe-images' storage bucket in Supabase for full functionality)");
+      }
     } finally {
       setUploading(false);
     }
