@@ -31,6 +31,8 @@ export default function AddRecipePage() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [imageUrl, setImageUrl] = useState("https://images.unsplash.com/photo-1565299624942-b28ea40a0ca6?auto=format&fit=crop&w=800&q=80&fm=jpg");
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
 
   if (isLoading) {
     return (
@@ -43,6 +45,73 @@ export default function AddRecipePage() {
     router.replace("/signin");
     return null;
   }
+
+  const handleImageUpload = async (file: File) => {
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      setMessage("Please select a valid image file.");
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      setMessage("Image size must be less than 5MB.");
+      return;
+    }
+
+    setUploading(true);
+    setMessage("");
+
+    try {
+      // Create a unique filename
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${user.id}/${Date.now()}.${fileExt}`;
+
+      // Upload to Supabase Storage
+      const { error } = await supabase.storage
+        .from('recipe-images')
+        .upload(fileName, file, {
+          cacheControl: '3600',
+          upsert: false
+        });
+
+      if (error) {
+        console.error('Upload error:', error);
+        setMessage("Failed to upload image. Please try again.");
+        return;
+      }
+
+      // Get the public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('recipe-images')
+        .getPublicUrl(fileName);
+
+      setImageUrl(publicUrl);
+      setMessage("Image uploaded successfully!");
+      
+      // Create preview
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setImagePreview(e.target?.result as string);
+      };
+      reader.readAsDataURL(file);
+
+    } catch (error) {
+      console.error('Upload error:', error);
+      setMessage("Failed to upload image. Please try again.");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      handleImageUpload(file);
+    }
+  };
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -144,28 +213,67 @@ export default function AddRecipePage() {
             <label htmlFor="instructions" className="block text-sm font-medium text-gray-700">Instructions</label>
             <textarea id="instructions" value={instructions} onChange={e => setInstructions(e.target.value)} required rows={4} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm" placeholder="Step-by-step instructions" />
           </div>
+          
+          {/* Image Upload Section */}
           <div>
-            <label htmlFor="imageUrl" className="block text-sm font-medium text-gray-700">Image URL</label>
-            <input 
-              id="imageUrl" 
-              type="url" 
-              value={imageUrl} 
-              onChange={e => setImageUrl(e.target.value)} 
-              placeholder="https://images.unsplash.com/photo-..." 
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm" 
-            />
-            <p className="mt-1 text-xs text-gray-500">
-              Optional: Add a direct link to an image (e.g., from Unsplash, Imgur, etc.)
-            </p>
-            <div className="mt-2 text-xs text-gray-400">
-              <p>Sample URLs you can use:</p>
-              <ul className="list-disc list-inside mt-1 space-y-1">
-                <li>https://images.unsplash.com/photo-1565299624942-b28ea40a0ca6?auto=format&fit=crop&w=800&q=80&fm=jpg</li>
-                <li>https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?auto=format&fit=crop&w=800&q=80&fm=jpg</li>
-                <li>https://images.unsplash.com/photo-1473093295043-cdd812d0e601?auto=format&fit=crop&w=800&q=80&fm=jpg</li>
-              </ul>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Recipe Image</label>
+            
+            {/* File Upload */}
+            <div className="mb-4">
+              <label htmlFor="imageUpload" className="block text-sm font-medium text-gray-700 mb-2">
+                Upload Image from Computer
+              </label>
+              <input
+                id="imageUpload"
+                type="file"
+                accept="image/*"
+                onChange={handleFileChange}
+                disabled={uploading}
+                className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-orange-50 file:text-orange-700 hover:file:bg-orange-100"
+              />
+              <p className="mt-1 text-xs text-gray-500">
+                Supported formats: JPG, PNG, GIF. Max size: 5MB
+              </p>
+              {uploading && (
+                <p className="mt-2 text-sm text-orange-600">Uploading image...</p>
+              )}
+            </div>
+
+            {/* Image Preview */}
+            {(imagePreview || imageUrl) && (
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Image Preview</label>
+                <div className="relative w-full h-48 bg-gray-100 rounded-lg overflow-hidden">
+                  <img
+                    src={imagePreview || imageUrl}
+                    alt="Recipe preview"
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      const img = e.currentTarget as HTMLImageElement;
+                      img.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAwIiBoZWlnaHQ9IjQwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZmVmM2M3Ii8+CiAgPHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIyNCIgZmlsbD0iI2Y1OWUwYiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPvCfh6nwn4epIFJlY2lwZSBJbWFnZTwvdGV4dD4KPC9zdmc+';
+                    }}
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* URL Input (Alternative) */}
+            <div>
+              <label htmlFor="imageUrl" className="block text-sm font-medium text-gray-700">Or Use Image URL</label>
+              <input 
+                id="imageUrl" 
+                type="url" 
+                value={imageUrl} 
+                onChange={e => setImageUrl(e.target.value)} 
+                placeholder="https://images.unsplash.com/photo-..." 
+                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm" 
+              />
+              <p className="mt-1 text-xs text-gray-500">
+                Alternative: Add a direct link to an image (e.g., from Unsplash, Imgur, etc.)
+              </p>
             </div>
           </div>
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <label htmlFor="cookingTime" className="block text-sm font-medium text-gray-700">Cooking Time (min)</label>
@@ -185,7 +293,7 @@ export default function AddRecipePage() {
             </div>
           </div>
           <div className="text-center">
-            <button type="submit" disabled={loading} className="w-full bg-orange-500 text-white px-8 py-3 rounded-lg hover:bg-orange-600 transition-colors font-semibold disabled:bg-gray-400">
+            <button type="submit" disabled={loading || uploading} className="w-full bg-orange-500 text-white px-8 py-3 rounded-lg hover:bg-orange-600 transition-colors font-semibold disabled:bg-gray-400">
               {loading ? 'Saving...' : 'Add Recipe'}
             </button>
           </div>
