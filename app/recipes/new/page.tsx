@@ -103,8 +103,8 @@ export default function AddRecipePage() {
           const reader = new FileReader();
           reader.onload = (e) => {
             setImagePreview(e.target?.result as string);
-            // Use a placeholder URL for the database
-            setImageUrl('https://images.unsplash.com/photo-1565299624942-b28ea40a0ca6?auto=format&fit=crop&w=800&q=80&fm=jpg');
+            // Use a more reliable placeholder URL for the database
+            setImageUrl('https://picsum.photos/800/400?random=6');
           };
           reader.readAsDataURL(file);
           return;
@@ -140,8 +140,8 @@ export default function AddRecipePage() {
         const reader = new FileReader();
         reader.onload = (e) => {
           setImagePreview(e.target?.result as string);
-          // Use a placeholder URL for the database
-          setImageUrl('https://images.unsplash.com/photo-1565299624942-b28ea40a0ca6?auto=format&fit=crop&w=800&q=80&fm=jpg');
+          // Use a more reliable placeholder URL for the database
+          setImageUrl('https://picsum.photos/800/400?random=6');
         };
         reader.readAsDataURL(file);
       } else {

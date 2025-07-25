@@ -53,12 +53,18 @@ export default function RecipeDetailPage() {
   const getReliableImageUrl = (originalUrl: string | undefined) => {
     if (!originalUrl) return null;
     
+    // If it's a Supabase Storage URL, use it directly
+    if (originalUrl.includes('supabase.co') || originalUrl.includes('storage.googleapis.com')) {
+      return originalUrl;
+    }
+    
     // If it's an Unsplash URL, try a more reliable one
     if (originalUrl.includes('unsplash.com')) {
       // Use a more reliable image source
       return 'https://picsum.photos/800/400?random=4';
     }
     
+    // For any other URL, return it as is
     return originalUrl;
   };
 
@@ -122,6 +128,8 @@ export default function RecipeDetailPage() {
         });
         console.log('Recipe detail page: Image URL =', data.image_url);
         console.log('Recipe detail page: Will use image URL =', getReliableImageUrl(data.image_url));
+        console.log('Recipe detail page: Is Supabase URL =', data.image_url?.includes('supabase.co'));
+        console.log('Recipe detail page: Is Storage URL =', data.image_url?.includes('storage.googleapis.com'));
       }
       setLoading(false);
     }
