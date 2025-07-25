@@ -119,6 +119,7 @@ export default function AddRecipePage() {
         .from('recipe-images')
         .getPublicUrl(fileName);
 
+      console.log('Recipe creation: Upload successful, public URL =', publicUrl);
       setImageUrl(publicUrl);
       setMessage("Image uploaded successfully!");
       
@@ -197,6 +198,11 @@ export default function AddRecipePage() {
         .single();
       console.log('Recipe creation: User profile test =', { userProfile, profileError });
       
+      // Test if storage bucket exists
+      console.log('Recipe creation: Testing storage bucket...');
+      const { data: bucketList, error: bucketError } = await supabase.storage.listBuckets();
+      console.log('Recipe creation: Storage buckets =', bucketList?.map(b => b.name), 'error =', bucketError);
+      
     } catch (testErr) {
       console.error('Recipe creation: Connection test failed =', testErr);
     }
@@ -210,6 +216,14 @@ export default function AddRecipePage() {
     
     try {
       console.log('Recipe creation: Attempting to insert recipe...');
+      console.log('Recipe creation: Image URL to save =', imageUrl);
+      console.log('Recipe creation: Image URL trimmed =', imageUrl.trim());
+      console.log('Recipe creation: Final image URL =', imageUrl.trim() || null);
+      
+      // Ensure we have a valid image URL (use fallback if none provided)
+      const finalImageUrl = imageUrl.trim() || 'https://picsum.photos/800/400?random=9';
+      console.log('Recipe creation: Using final image URL =', finalImageUrl);
+      
       const { error } = await supabase.from("recipes").insert({
         user_id: user.id,
         title: title.trim(),
@@ -218,7 +232,7 @@ export default function AddRecipePage() {
         cooking_time: cookingTime ? parseInt(cookingTime) : null,
         difficulty,
         category,
-        image_url: imageUrl.trim() || null,
+        image_url: finalImageUrl,
       });
       
       clearTimeout(timeoutId);
