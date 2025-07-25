@@ -53,11 +53,7 @@ export default function RecipeDetailPage() {
   const getReliableImageUrl = (originalUrl: string | undefined) => {
     if (!originalUrl) return null;
     
-    // If it's an Unsplash URL, use our placeholder instead
-    if (originalUrl.includes('unsplash.com')) {
-      return getPlaceholderImage();
-    }
-    
+    // Return the original URL - let the onError handler deal with failures
     return originalUrl;
   };
 
@@ -108,6 +104,7 @@ export default function RecipeDetailPage() {
           profiles: { username: profileData?.username || 'Unknown' }
         });
         console.log('Recipe detail page: Image URL =', data.image_url);
+        console.log('Recipe detail page: Will use image URL =', getReliableImageUrl(data.image_url));
       }
       setLoading(false);
     }
