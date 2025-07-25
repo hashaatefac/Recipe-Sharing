@@ -235,12 +235,12 @@ export default function RecipeDetailPage() {
                  <Link href="/recipes" className="text-orange-600 hover:underline mb-4 inline-block">&larr; Back to All Recipes</Link>
         <div className="bg-white p-8 rounded-xl shadow-md">
           {/* Debug information - remove this in production */}
-          {process.env.NODE_ENV === 'development' && (
-            <div className="mb-4 p-2 bg-gray-100 rounded text-xs">
-              <p>Debug: Image URL = {recipe.image_url || 'null'}</p>
-              <p>Debug: Recipe ID = {recipe.id}</p>
-            </div>
-          )}
+          <div className="mb-4 p-2 bg-gray-100 rounded text-xs">
+            <p>Debug: Image URL = {recipe.image_url || 'null'}</p>
+            <p>Debug: Recipe ID = {recipe.id}</p>
+            <p>Debug: Recipe Title = {recipe.title}</p>
+            <p>Debug: Has Image = {recipe.image_url ? 'Yes' : 'No'}</p>
+          </div>
           
           {recipe.image_url ? (
             <div className="relative">

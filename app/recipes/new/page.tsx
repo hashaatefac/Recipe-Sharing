@@ -30,7 +30,7 @@ export default function AddRecipePage() {
   const [category, setCategory] = useState(categories[0]);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
-  const [imageUrl, setImageUrl] = useState("");
+  const [imageUrl, setImageUrl] = useState("https://images.unsplash.com/photo-1565299624942-b28ea40a0ca6?w=800");
 
   if (isLoading) {
     return (
