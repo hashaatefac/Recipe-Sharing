@@ -53,18 +53,12 @@ export default function RecipeDetailPage() {
   const getReliableImageUrl = (originalUrl: string | undefined) => {
     if (!originalUrl) return null;
     
-    // If it's already a relative URL or our own domain, return as is
-    if (originalUrl.startsWith('/') || originalUrl.includes(window.location.hostname)) {
-      return originalUrl;
-    }
-    
-    // For Unsplash URLs, try a simpler approach
+    // If it's an Unsplash URL, try to make it more reliable
     if (originalUrl.includes('unsplash.com')) {
-      // Use a simple, reliable Unsplash image as fallback
+      // Try a different Unsplash URL that's more reliable
       return 'https://images.unsplash.com/photo-1565299624942-b28ea40a0ca6?auto=format&fit=crop&w=800&q=80&fm=jpg';
     }
     
-    // For other external URLs, return as is
     return originalUrl;
   };
 
@@ -167,16 +161,16 @@ export default function RecipeDetailPage() {
     if (!recipeId) return;
     async function fetchLikes() {
       try {
-        // Get total likes
-        const { count, error: countError } = await supabase
+        // Get total likes - use a different approach
+        const { data: likesData, error: countError } = await supabase
           .from("recipe_likes")
-          .select("*", { count: "exact", head: true })
+          .select("id")
           .eq("recipe_id", recipeId);
         
         if (countError) {
           console.error('Error fetching likes count:', countError);
         } else {
-          setLikes(count || 0);
+          setLikes(likesData?.length || 0);
         }
 
         // Check if user liked
@@ -231,15 +225,15 @@ export default function RecipeDetailPage() {
       }
 
       // Refetch likes
-      const { count, error: countError } = await supabase
+      const { data: likesData, error: countError } = await supabase
         .from("recipe_likes")
-        .select("*", { count: "exact", head: true })
+        .select("id")
         .eq("recipe_id", recipeId);
       
       if (countError) {
         console.error('Error refetching likes count:', countError);
       } else {
-        setLikes(count || 0);
+        setLikes(likesData?.length || 0);
       }
 
       // Refetch user liked
