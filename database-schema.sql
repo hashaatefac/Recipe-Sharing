@@ -29,6 +29,24 @@ CREATE TABLE recipes (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+-- Create recipe_likes table
+CREATE TABLE recipe_likes (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+  recipe_id UUID REFERENCES recipes(id) ON DELETE CASCADE NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  UNIQUE(user_id, recipe_id) -- Prevent duplicate likes
+);
+
+-- Create comments table
+CREATE TABLE comments (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+  recipe_id UUID REFERENCES recipes(id) ON DELETE CASCADE NOT NULL,
+  content TEXT NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
 -- Create indexes for better performance
 CREATE INDEX idx_recipes_user_id ON recipes(user_id);
 CREATE INDEX idx_recipes_created_at ON recipes(created_at);
@@ -36,6 +54,8 @@ CREATE INDEX idx_recipes_created_at ON recipes(created_at);
 -- Enable RLS (Row Level Security)
 ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE recipes ENABLE ROW LEVEL SECURITY;
+ALTER TABLE recipe_likes ENABLE ROW LEVEL SECURITY;
+ALTER TABLE comments ENABLE ROW LEVEL SECURITY;
 
 -- Profiles policies
 CREATE POLICY "Profiles are viewable by everyone" ON profiles
@@ -58,6 +78,29 @@ CREATE POLICY "Users can update their own recipes" ON recipes
   FOR UPDATE USING (auth.uid() = user_id);
 
 CREATE POLICY "Users can delete their own recipes" ON recipes
+  FOR DELETE USING (auth.uid() = user_id);
+
+-- Recipe likes policies
+CREATE POLICY "Recipe likes are viewable by everyone" ON recipe_likes
+  FOR SELECT USING (true);
+
+CREATE POLICY "Users can insert their own likes" ON recipe_likes
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can delete their own likes" ON recipe_likes
+  FOR DELETE USING (auth.uid() = user_id);
+
+-- Comments policies
+CREATE POLICY "Comments are viewable by everyone" ON comments
+  FOR SELECT USING (true);
+
+CREATE POLICY "Users can insert their own comments" ON comments
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can update their own comments" ON comments
+  FOR UPDATE USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can delete their own comments" ON comments
   FOR DELETE USING (auth.uid() = user_id);
 
 -- Function to update updated_at timestamp
