@@ -48,9 +48,11 @@ export default function RecipeDetailPage() {
   const [likes, setLikes] = useState(0);
   const [userLiked, setUserLiked] = useState(false);
   const [likeLoading, setLikeLoading] = useState(false);
+  const [imageLoadAttempts, setImageLoadAttempts] = useState(0);
+  const maxImageAttempts = 3;
 
-  // Function to proxy external images
-  const getProxiedImageUrl = (originalUrl: string | undefined) => {
+  // Function to get a reliable image URL
+  const getReliableImageUrl = (originalUrl: string | undefined) => {
     if (!originalUrl) return null;
     
     // If it's already a relative URL or our own domain, return as is
@@ -58,8 +60,29 @@ export default function RecipeDetailPage() {
       return originalUrl;
     }
     
-    // For external URLs, use our proxy
-    return `/api/image-proxy?url=${encodeURIComponent(originalUrl)}`;
+    // For Unsplash URLs, try different formats based on attempt number
+    if (originalUrl.includes('unsplash.com')) {
+      const url = new URL(originalUrl);
+      
+      if (imageLoadAttempts === 0) {
+        // First attempt: original URL
+        return originalUrl;
+      } else if (imageLoadAttempts === 1) {
+        // Second attempt: with format parameters
+        url.searchParams.set('auto', 'format');
+        url.searchParams.set('fit', 'crop');
+        url.searchParams.set('w', '800');
+        url.searchParams.set('q', '80');
+        url.searchParams.set('fm', 'jpg');
+        return url.toString();
+      } else {
+        // Third attempt: try a different Unsplash image
+        return 'https://images.unsplash.com/photo-1565299624942-b28ea40a0ca6?auto=format&fit=crop&w=800&q=80&fm=jpg';
+      }
+    }
+    
+    // For other external URLs, return as is
+    return originalUrl;
   };
 
   useEffect(() => {
@@ -256,6 +279,7 @@ export default function RecipeDetailPage() {
             <button 
               onClick={() => {
                 console.log('🔍 Testing image URL:', recipe.image_url);
+                console.log('🔍 Reliable URL:', getReliableImageUrl(recipe.image_url));
                 if (recipe.image_url) {
                   fetch(recipe.image_url)
                     .then(response => {
@@ -291,12 +315,13 @@ export default function RecipeDetailPage() {
           {recipe.image_url ? (
             <div className="relative">
               <img 
-                src={getProxiedImageUrl(recipe.image_url) || recipe.image_url} 
+                src={getReliableImageUrl(recipe.image_url) || recipe.image_url} 
                 alt={recipe.title} 
                 className="w-full h-64 object-cover rounded mb-6"
                 onError={(e) => {
                   console.error('❌ Image failed to load:', recipe.image_url);
-                  console.error('❌ Proxied URL:', getProxiedImageUrl(recipe.image_url));
+                  console.error('❌ Reliable URL:', getReliableImageUrl(recipe.image_url));
+                  console.error('❌ Attempt:', imageLoadAttempts + 1);
                   console.error('❌ Error details:', e);
                   console.error('❌ Recipe ID:', recipe.id);
                   console.error('❌ Recipe title:', recipe.title);
@@ -305,25 +330,33 @@ export default function RecipeDetailPage() {
                   const debugDiv = document.querySelector('.debug-info');
                   if (debugDiv) {
                     debugDiv.innerHTML += `<p style="color: red;">❌ Image failed to load: ${recipe.image_url}</p>`;
-                    debugDiv.innerHTML += `<p style="color: red;">❌ Proxied URL: ${getProxiedImageUrl(recipe.image_url)}</p>`;
+                    debugDiv.innerHTML += `<p style="color: red;">❌ Reliable URL: ${getReliableImageUrl(recipe.image_url)}</p>`;
+                    debugDiv.innerHTML += `<p style="color: red;">❌ Attempt: ${imageLoadAttempts + 1}</p>`;
                   }
                   
-                  const img = e.currentTarget as HTMLImageElement;
-                  const placeholder = img.nextElementSibling as HTMLElement;
-                  if (img && placeholder) {
-                    img.style.display = 'none';
-                    placeholder.style.display = 'flex';
+                  // Try fallback if we haven't exceeded max attempts
+                  if (imageLoadAttempts < maxImageAttempts - 1) {
+                    setImageLoadAttempts(prev => prev + 1);
+                    console.log('🔄 Trying fallback image...');
+                  } else {
+                    // Show placeholder after all attempts fail
+                    const img = e.currentTarget as HTMLImageElement;
+                    const placeholder = img.nextElementSibling as HTMLElement;
+                    if (img && placeholder) {
+                      img.style.display = 'none';
+                      placeholder.style.display = 'flex';
+                    }
                   }
                 }}
                 onLoad={() => {
                   console.log('✅ Image loaded successfully:', recipe.image_url);
-                  console.log('✅ Proxied URL:', getProxiedImageUrl(recipe.image_url));
+                  console.log('✅ Reliable URL:', getReliableImageUrl(recipe.image_url));
                   
                   // Show success in debug info
                   const debugDiv = document.querySelector('.debug-info');
                   if (debugDiv) {
                     debugDiv.innerHTML += `<p style="color: green;">✅ Image loaded: ${recipe.image_url}</p>`;
-                    debugDiv.innerHTML += `<p style="color: green;">✅ Proxied URL: ${getProxiedImageUrl(recipe.image_url)}</p>`;
+                    debugDiv.innerHTML += `<p style="color: green;">✅ Reliable URL: ${getReliableImageUrl(recipe.image_url)}</p>`;
                   }
                 }}
               />
