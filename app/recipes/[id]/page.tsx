@@ -130,6 +130,19 @@ export default function RecipeDetailPage() {
         console.log('Recipe detail page: Will use image URL =', getReliableImageUrl(data.image_url));
         console.log('Recipe detail page: Is Supabase URL =', data.image_url?.includes('supabase.co'));
         console.log('Recipe detail page: Is Storage URL =', data.image_url?.includes('storage.googleapis.com'));
+        console.log('Recipe detail page: Final display URL =', data.image_url || 'will use fallback');
+        
+        // Test if the URL is accessible
+        if (data.image_url && (data.image_url.includes('supabase.co') || data.image_url.includes('storage.googleapis.com'))) {
+          console.log('Recipe detail page: Testing Supabase URL accessibility...');
+          fetch(data.image_url, { method: 'HEAD' })
+            .then(response => {
+              console.log('Recipe detail page: URL accessibility test result =', response.status, response.statusText);
+            })
+            .catch(error => {
+              console.log('Recipe detail page: URL accessibility test failed =', error);
+            });
+        }
       }
       setLoading(false);
     }
@@ -318,7 +331,7 @@ export default function RecipeDetailPage() {
           {recipe.image_url ? (
             <div className="relative">
               <img 
-                src={getReliableImageUrl(recipe.image_url) || getFallbackImageUrl()} 
+                src={recipe.image_url || getFallbackImageUrl()} 
                 alt={recipe.title} 
                 className="w-full h-64 object-cover rounded mb-6"
                 onError={(e) => {
