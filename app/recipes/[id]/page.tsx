@@ -49,6 +49,19 @@ export default function RecipeDetailPage() {
   const [userLiked, setUserLiked] = useState(false);
   const [likeLoading, setLikeLoading] = useState(false);
 
+  // Function to proxy external images
+  const getProxiedImageUrl = (originalUrl: string | undefined) => {
+    if (!originalUrl) return null;
+    
+    // If it's already a relative URL or our own domain, return as is
+    if (originalUrl.startsWith('/') || originalUrl.includes(window.location.hostname)) {
+      return originalUrl;
+    }
+    
+    // For external URLs, use our proxy
+    return `/api/image-proxy?url=${encodeURIComponent(originalUrl)}`;
+  };
+
   useEffect(() => {
     if (!recipeId) {
       console.log('Recipe detail page: No recipeId provided');
@@ -278,11 +291,12 @@ export default function RecipeDetailPage() {
           {recipe.image_url ? (
             <div className="relative">
               <img 
-                src={recipe.image_url} 
+                src={getProxiedImageUrl(recipe.image_url) || recipe.image_url} 
                 alt={recipe.title} 
                 className="w-full h-64 object-cover rounded mb-6"
                 onError={(e) => {
                   console.error('❌ Image failed to load:', recipe.image_url);
+                  console.error('❌ Proxied URL:', getProxiedImageUrl(recipe.image_url));
                   console.error('❌ Error details:', e);
                   console.error('❌ Recipe ID:', recipe.id);
                   console.error('❌ Recipe title:', recipe.title);
@@ -291,6 +305,7 @@ export default function RecipeDetailPage() {
                   const debugDiv = document.querySelector('.debug-info');
                   if (debugDiv) {
                     debugDiv.innerHTML += `<p style="color: red;">❌ Image failed to load: ${recipe.image_url}</p>`;
+                    debugDiv.innerHTML += `<p style="color: red;">❌ Proxied URL: ${getProxiedImageUrl(recipe.image_url)}</p>`;
                   }
                   
                   const img = e.currentTarget as HTMLImageElement;
@@ -302,11 +317,13 @@ export default function RecipeDetailPage() {
                 }}
                 onLoad={() => {
                   console.log('✅ Image loaded successfully:', recipe.image_url);
+                  console.log('✅ Proxied URL:', getProxiedImageUrl(recipe.image_url));
                   
                   // Show success in debug info
                   const debugDiv = document.querySelector('.debug-info');
                   if (debugDiv) {
                     debugDiv.innerHTML += `<p style="color: green;">✅ Image loaded: ${recipe.image_url}</p>`;
+                    debugDiv.innerHTML += `<p style="color: green;">✅ Proxied URL: ${getProxiedImageUrl(recipe.image_url)}</p>`;
                   }
                 }}
               />
