@@ -259,32 +259,6 @@ export default function RecipeDetailPage() {
       <main className="max-w-2xl mx-auto px-4 py-12">
                  <Link href="/recipes" className="text-orange-600 hover:underline mb-4 inline-block">&larr; Back to All Recipes</Link>
         <div className="bg-white p-8 rounded-xl shadow-md">
-          {/* Debug information - remove this in production */}
-          <div className="mb-4 p-2 bg-gray-100 rounded text-xs debug-info">
-            <p>Debug: Image URL = {recipe.image_url || 'null'}</p>
-            <p>Debug: Recipe ID = {recipe.id}</p>
-            <p>Debug: Recipe Title = {recipe.title}</p>
-            <p>Debug: Has Image = {recipe.image_url ? 'Yes' : 'No'}</p>
-            <button 
-              onClick={() => {
-                console.log('🔍 Testing image URLs:');
-                console.log('🔍 Original URL:', recipe.image_url);
-                console.log('🔍 Reliable URL:', getReliableImageUrl(recipe.image_url));
-                console.log('🔍 Placeholder URL:', getPlaceholderImage().substring(0, 50) + '...');
-                
-                const debugDiv = document.querySelector('.debug-info');
-                if (debugDiv) {
-                  debugDiv.innerHTML += `<p style="color: blue;">🔍 Original URL: ${recipe.image_url}</p>`;
-                  debugDiv.innerHTML += `<p style="color: blue;">🔍 Reliable URL: ${getReliableImageUrl(recipe.image_url)}</p>`;
-                  debugDiv.innerHTML += `<p style="color: blue;">🔍 Using placeholder as fallback</p>`;
-                }
-              }}
-              className="mt-2 px-2 py-1 bg-blue-500 text-white rounded text-xs"
-            >
-              Test Image URLs
-            </button>
-          </div>
-          
           {recipe.image_url ? (
             <div className="relative">
               <img 
@@ -292,19 +266,7 @@ export default function RecipeDetailPage() {
                 alt={recipe.title} 
                 className="w-full h-64 object-cover rounded mb-6"
                 onError={(e) => {
-                  console.error('❌ Image failed to load, using placeholder');
-                  console.error('❌ Original URL:', recipe.image_url);
-                  console.error('❌ Reliable URL:', getReliableImageUrl(recipe.image_url));
-                  console.error('❌ Recipe ID:', recipe.id);
-                  console.error('❌ Recipe title:', recipe.title);
-                  
-                  // Show error in debug info
-                  const debugDiv = document.querySelector('.debug-info');
-                  if (debugDiv) {
-                    debugDiv.innerHTML += `<p style="color: red;">❌ Image failed to load, using placeholder</p>`;
-                    debugDiv.innerHTML += `<p style="color: red;">❌ Original URL: ${recipe.image_url}</p>`;
-                    debugDiv.innerHTML += `<p style="color: red;">❌ Reliable URL: ${getReliableImageUrl(recipe.image_url)}</p>`;
-                  }
+                  console.log('❌ Image failed to load, using placeholder');
                   
                   // Use placeholder image
                   const img = e.currentTarget as HTMLImageElement;
@@ -313,14 +275,6 @@ export default function RecipeDetailPage() {
                 }}
                 onLoad={() => {
                   console.log('✅ Image loaded successfully');
-                  console.log('✅ URL:', recipe.image_url);
-                  
-                  // Show success in debug info
-                  const debugDiv = document.querySelector('.debug-info');
-                  if (debugDiv) {
-                    debugDiv.innerHTML += `<p style="color: green;">✅ Image loaded successfully</p>`;
-                    debugDiv.innerHTML += `<p style="color: green;">✅ URL: ${recipe.image_url}</p>`;
-                  }
                 }}
               />
             </div>
