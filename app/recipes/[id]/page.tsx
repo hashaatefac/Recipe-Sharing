@@ -53,10 +53,9 @@ export default function RecipeDetailPage() {
   const getReliableImageUrl = (originalUrl: string | undefined) => {
     if (!originalUrl) return null;
     
-    // If it's an Unsplash URL, try to make it more reliable
+    // If it's an Unsplash URL, use our placeholder instead
     if (originalUrl.includes('unsplash.com')) {
-      // Try a different Unsplash URL that's more reliable
-      return 'https://images.unsplash.com/photo-1565299624942-b28ea40a0ca6?auto=format&fit=crop&w=800&q=80&fm=jpg';
+      return getPlaceholderImage();
     }
     
     return originalUrl;
@@ -64,8 +63,8 @@ export default function RecipeDetailPage() {
 
   // Function to get a placeholder image
   const getPlaceholderImage = () => {
-    // Return a simple data URL for a placeholder
-    return 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAwIiBoZWlnaHQ9IjQwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZmVmM2M3Ii8+CiAgPHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIyNCIgZmlsbD0iI2Y1OWUwYiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPvCfh6nwn4epIFJlY2lwZSBJbWFnZTwvdGV4dD4KPC9zdmc+';
+    // Return a more visually appealing SVG placeholder
+    return 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAwIiBoZWlnaHQ9IjQwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8ZGVmcz4KICAgIDxsaW5lYXJHcmFkaWVudCBpZD0iZ3JhZGllbnQiIHgxPSIwJSIgeTE9IjAlIiB4Mj0iMTAwJSIgeTI9IjEwMCUiPgogICAgICA8c3RvcCBvZmZzZXQ9IjAlIiBzdHlsZT0ic3RvcC1jb2xvcjojZmY5NzE5O3N0b3Atb3BhY2l0eToxIiAvPgogICAgICA8c3RvcCBvZmZzZXQ9IjEwMCUiIHN0eWxlPSJzdG9wLWNvbG9yOiNmZjc0MTQ7c3RvcC1vcGFjaXR5OjEiIC8+CiAgICA8L2xpbmVhckdyYWRpZW50PgogIDwvZGVmcz4KICA8cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSJ1cmwoI2dyYWRpZW50KSIvPgogIDx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0iQXJpYWwsIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMjQiIGZpbGw9IndoaXRlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkeT0iLjNlbSI+8J+HqfCfh6kgUmVjaXBlIEltYWdlPC90ZXh0Pgo8L3N2Zz4=';
   };
 
   useEffect(() => {
@@ -316,6 +315,7 @@ export default function RecipeDetailPage() {
                     console.log('✅ Image loaded successfully');
                   }
                 }}
+                crossOrigin="anonymous"
               />
             </div>
           ) : (
