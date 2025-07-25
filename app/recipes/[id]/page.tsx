@@ -53,8 +53,25 @@ export default function RecipeDetailPage() {
   const getReliableImageUrl = (originalUrl: string | undefined) => {
     if (!originalUrl) return null;
     
-    // Return the original URL - let the onError handler deal with failures
+    // If it's an Unsplash URL, try a more reliable one
+    if (originalUrl.includes('unsplash.com')) {
+      // Use a different, more reliable Unsplash URL
+      return 'https://images.unsplash.com/photo-1565299624942-b28ea40a0ca6?auto=format&fit=crop&w=800&q=80&fm=jpg';
+    }
+    
     return originalUrl;
+  };
+
+  // Function to get a reliable fallback image URL
+  const getFallbackImageUrl = () => {
+    const fallbackUrls = [
+      'https://images.unsplash.com/photo-1565299624942-b28ea40a0ca6?auto=format&fit=crop&w=800&q=80&fm=jpg',
+      'https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?auto=format&fit=crop&w=800&q=80&fm=jpg',
+      'https://images.unsplash.com/photo-1473093295043-cdd812d0e601?auto=format&fit=crop&w=800&q=80&fm=jpg'
+    ];
+    
+    // Return a random fallback URL
+    return fallbackUrls[Math.floor(Math.random() * fallbackUrls.length)];
   };
 
   // Function to get a placeholder image
@@ -293,16 +310,24 @@ export default function RecipeDetailPage() {
           {recipe.image_url ? (
             <div className="relative">
               <img 
-                src={getReliableImageUrl(recipe.image_url) || getPlaceholderImage()} 
+                src={getReliableImageUrl(recipe.image_url) || getFallbackImageUrl()} 
                 alt={recipe.title} 
                 className="w-full h-64 object-cover rounded mb-6"
                 onError={(e) => {
                   const img = e.currentTarget as HTMLImageElement;
                   // Only set placeholder if the current src is not already the placeholder
                   if (!img.src.includes('data:image/svg+xml')) {
-                    console.log('❌ Image failed to load, using placeholder');
-                    img.src = getPlaceholderImage();
-                    img.onerror = null; // Prevent infinite loop
+                    console.log('❌ Image failed to load, trying fallback');
+                    
+                    // Try a fallback URL first
+                    if (!img.src.includes('fallback=true')) {
+                      img.src = getFallbackImageUrl() + '&fallback=true';
+                    } else {
+                      // If fallback also fails, use placeholder
+                      console.log('❌ Fallback also failed, using placeholder');
+                      img.src = getPlaceholderImage();
+                      img.onerror = null; // Prevent infinite loop
+                    }
                   }
                 }}
                 onLoad={(e) => {
