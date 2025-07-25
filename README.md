@@ -42,5 +42,7 @@ The platform uses the following main tables:
 
 The application is deployed on Vercel and automatically updates when changes are pushed to the main branch.
 
+**Latest Update**: Fixed deployment issues and removed redundant dashboard page.
+
 ---
 *Last updated: December 2024*
