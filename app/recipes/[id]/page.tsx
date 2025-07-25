@@ -166,23 +166,38 @@ export default function RecipeDetailPage() {
   useEffect(() => {
     if (!recipeId) return;
     async function fetchLikes() {
-      // Get total likes
-      const { count } = await supabase
-        .from("recipe_likes")
-        .select("id", { count: "exact", head: true })
-        .eq("recipe_id", recipeId);
-      setLikes(count || 0);
-      // Check if user liked
-      if (user) {
-        const { data } = await supabase
+      try {
+        // Get total likes
+        const { count, error: countError } = await supabase
           .from("recipe_likes")
-          .select("id")
-          .eq("recipe_id", recipeId)
-          .eq("user_id", user.id)
-          .single();
-        setUserLiked(!!data);
-      } else {
-        setUserLiked(false);
+          .select("*", { count: "exact", head: true })
+          .eq("recipe_id", recipeId);
+        
+        if (countError) {
+          console.error('Error fetching likes count:', countError);
+        } else {
+          setLikes(count || 0);
+        }
+
+        // Check if user liked
+        if (user) {
+          const { data, error: userLikeError } = await supabase
+            .from("recipe_likes")
+            .select("id")
+            .eq("recipe_id", recipeId)
+            .eq("user_id", user.id)
+            .single();
+          
+          if (userLikeError && userLikeError.code !== 'PGRST116') {
+            console.error('Error checking user like:', userLikeError);
+          } else {
+            setUserLiked(!!data);
+          }
+        } else {
+          setUserLiked(false);
+        }
+      } catch (error) {
+        console.error('Error in fetchLikes:', error);
       }
     }
     fetchLikes();
@@ -191,36 +206,62 @@ export default function RecipeDetailPage() {
   async function handleLike() {
     if (!user || likeLoading) return;
     setLikeLoading(true);
-    if (userLiked) {
-      // Unlike
-      await supabase
+    
+    try {
+      if (userLiked) {
+        // Unlike
+        const { error: deleteError } = await supabase
+          .from("recipe_likes")
+          .delete()
+          .eq("recipe_id", recipeId)
+          .eq("user_id", user.id);
+        
+        if (deleteError) {
+          console.error('Error unliking recipe:', deleteError);
+        }
+      } else {
+        // Like
+        const { error: insertError } = await supabase
+          .from("recipe_likes")
+          .insert({ recipe_id: recipeId, user_id: user.id });
+        
+        if (insertError) {
+          console.error('Error liking recipe:', insertError);
+        }
+      }
+
+      // Refetch likes
+      const { count, error: countError } = await supabase
         .from("recipe_likes")
-        .delete()
-        .eq("recipe_id", recipeId)
-        .eq("user_id", user.id);
-    } else {
-      // Like
-      await supabase
-        .from("recipe_likes")
-        .insert({ recipe_id: recipeId, user_id: user.id });
+        .select("*", { count: "exact", head: true })
+        .eq("recipe_id", recipeId);
+      
+      if (countError) {
+        console.error('Error refetching likes count:', countError);
+      } else {
+        setLikes(count || 0);
+      }
+
+      // Refetch user liked
+      if (user) {
+        const { data, error: userLikeError } = await supabase
+          .from("recipe_likes")
+          .select("id")
+          .eq("recipe_id", recipeId)
+          .eq("user_id", user.id)
+          .single();
+        
+        if (userLikeError && userLikeError.code !== 'PGRST116') {
+          console.error('Error refetching user like:', userLikeError);
+        } else {
+          setUserLiked(!!data);
+        }
+      }
+    } catch (error) {
+      console.error('Error in handleLike:', error);
+    } finally {
+      setLikeLoading(false);
     }
-    // Refetch likes
-    const { count } = await supabase
-      .from("recipe_likes")
-      .select("id", { count: "exact", head: true })
-      .eq("recipe_id", recipeId);
-    setLikes(count || 0);
-    // Refetch user liked
-    if (user) {
-      const { data } = await supabase
-        .from("recipe_likes")
-        .select("id")
-        .eq("recipe_id", recipeId)
-        .eq("user_id", user.id)
-        .single();
-      setUserLiked(!!data);
-    }
-    setLikeLoading(false);
   }
 
   if (loading) {
@@ -266,15 +307,20 @@ export default function RecipeDetailPage() {
                 alt={recipe.title} 
                 className="w-full h-64 object-cover rounded mb-6"
                 onError={(e) => {
-                  console.log('❌ Image failed to load, using placeholder');
-                  
-                  // Use placeholder image
                   const img = e.currentTarget as HTMLImageElement;
-                  img.src = getPlaceholderImage();
-                  img.onerror = null; // Prevent infinite loop
+                  // Only set placeholder if the current src is not already the placeholder
+                  if (!img.src.includes('data:image/svg+xml')) {
+                    console.log('❌ Image failed to load, using placeholder');
+                    img.src = getPlaceholderImage();
+                    img.onerror = null; // Prevent infinite loop
+                  }
                 }}
-                onLoad={() => {
-                  console.log('✅ Image loaded successfully');
+                onLoad={(e) => {
+                  const img = e.currentTarget as HTMLImageElement;
+                  // Only log success if it's not the placeholder
+                  if (!img.src.includes('data:image/svg+xml')) {
+                    console.log('✅ Image loaded successfully');
+                  }
                 }}
               />
             </div>
